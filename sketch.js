@@ -123,11 +123,11 @@ function displayEyeObjects(){
 function initializePoints(){
     var objs = shuffleArray(objects);
     for (let i = 0; i < objs.length; i++){
-        var n = /*int(random(2,5));*/ 2;
+        var n = int(random(2,4));
         var b = 0;
         if (objs[i].isNose || objs[i].isEye) {
-            n = 4;
-            b = 0.5;
+            n += 2;
+            b = 0.8;
         }
         var rand = random();
         for (let j = 0; j < n; j++ ){
