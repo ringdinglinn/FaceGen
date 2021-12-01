@@ -124,10 +124,14 @@ function initializePoints(){
     var objs = shuffleArray(objects);
     for (let i = 0; i < objs.length; i++){
         var n = /*int(random(2,5));*/ 2;
-        if (objs[i].isNose) n = 4;
+        var b = 0;
+        if (objs[i].isNose || objs[i].isEye) {
+            n = 4;
+            b = 0.5;
+        }
         var rand = random();
         for (let j = 0; j < n; j++ ){
-            var p = objs[i].samplePoint(rand + j/n);
+            var p = objs[i].samplePoint(rand + (j+b)/n);
             points.push(p);
         }
     }
