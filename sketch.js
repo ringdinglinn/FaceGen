@@ -17,7 +17,7 @@ function setup() {
 
     // displayObjects();
     // displayPoints();
-    displayEyeObjects();
+    // displayEyeObjects();
 
     // sortPoints();
     // displaySortedPoints();
