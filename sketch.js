@@ -156,7 +156,7 @@ class Obj {
             this.relPoints[i].x += random(-settings.objOffset,settings.objOffset);
             this.relPoints[i].y += random(-settings.objOffset,settings.objOffset);
         }
-        this.radius += random(max(-settings.objOffset,0),settings.objOffset);
+        this.radius = max(this.radius += random(-settings.objOffset,settings.objOffset), 0);
     }
 
     getMeasures(){
