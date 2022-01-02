@@ -2,9 +2,53 @@
   <head>
     <script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
     <script src="sketch.js"></script>
+    <link rel="stylesheet" href="styles.css">
   </head>
-  <body style="margin:0px;">
-    <main>
+  <body style="margin:0px;">  
+    <aside id="ui-holder">
+      <form id="frm1" action="/action_page.php">
+        <div class="field">
+          Feature random offset<br><br><input type="text" name="fname" onchange="updateSettings(0, this)"><br>
+        </div>
+        <hr>
+        <div class="field">
+          Feature spawn probability<br><br><input type="text" name="lname" onchange="updateSettings(1, this)"><br>
+        </div>
+        <hr>
+        <div id="min-max" class="field">
+          Vertex number range<br><br>
+          <div>
+            <div id="min">
+              min
+              <br>
+              <input type="text" id="max-input" onchange="updateSettings(2, this)">
+            </div>
+            <div id="max">
+              max
+              <br>
+              <input type="text" id="min-input" onchange="updateSettings(3, this)">
+            </div>
+          </div>
+        </div>
+        <hr>
+        <div class="field" id="upload-field">
+          Upload config<br><br>
+          <div>
+            <input type="file" id="file-input" single onchange="uploadFile(this.files[0])">
+            <input id="upload-button" type="button" onclick="loadConfig()" value="update">
+          </div>
+        </div>
+        <hr>
+        <div class="field">
+          <input id="generate-button" type="button" onclick="calculate()" value="generate">
+        </div>
+        <div class="field" id="save-buttons">
+          <input id="generate-button" type="button" onclick="saveConfig()" value="save config">
+          <input id="generate-button" type="button" onclick="savePNG()" value="download png">
+        </div>
+      </form>
+    </aside>
+    <main id="canvas-holder">
     </main>
   </body>
 </html>

@@ -4,57 +4,159 @@ var points;
 var sortedPoints;
 var bezierPoints;
 
-function setup() {
-    createCanvas(windowWidth, windowHeight);
-    objects = new Array();
-    points = new Array();
-    grid1d = new Array();
-    grid2d = new Array();
-    targetNodes = new Array();
+var settings;
+var data;
 
-    initializeObjects();
-    initializePoints();
+var canvas;
+var widthOffset = 300;
+
+function setup() {
+    init();
+}
+
+function init(){
+
+    createCanvas( (window.innerWidth - widthOffset), window.innerHeight);
+
+    settings = new Settings();
+
+    calculate();
 
     // displayObjects();
-    // displayPoints();
+    // displayVertices();
     // displayEyeObjects();
 
     // sortPoints();
-    // displaySortedPoints();
+    // displaySortedVertices();
+}
 
+function calculate(){
+    initializeObjects();
+    initializeVertices();
+    update();
+}
+
+function update(){
+    background(255);
     createBezier();
     displayBezier();
-
 }
 
-function draw(){
+function windowResized() {
+    resizeCanvas( (window.innerWidth - widthOffset), window.innerHeight);
+    update();
 }
 
-class obj {
+function savePNG(){
+    saveCanvas('face', 'png');
+}
+
+function saveConfig(){
+    download(JSON.stringify(settings), "config.json", "text/plain");
+}
+
+function uploadFile(file){
+    var fr = new FileReader();
+    fr.onload = onReaderLoad;
+    fr.readAsText(file);
+}
+
+function onReaderLoad(event){
+    data = event.target.result;
+}
+
+function loadConfig(){
+    settings = JSON.parse(data);
+    console.log(settings);
+}
+
+function download(content, fileName, contentType) {
+    const a = document.createElement("a");
+    const file = new Blob([content], { type: contentType });
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+}
+
+function updateSettings(index, elem){
+    var value = parseFloat(elem.value);
+    if (index == 0){
+        settings.objOffset = value;
+    }
+    if (index == 1){
+        settings.objSpawnProbability = value;
+    }
+    if (index == 2){
+        settings.minVerticesPerObj = value;
+    }
+    if (index == 3){
+        settings.maxVerticesPerObj = value;
+    }
+}
+
+class Settings{
+    constructor(){
+        this.objOffset = 20;
+        this.objSpawnProbability = 1;
+        this.maxVerticesPerObj = 4;
+        this.minVerticesPerObj = 1;
+    }
+}
+
+class Obj {
     constructor(points, radius, isEye, isNose) {
-        this.points = points;
+        if (random() > settings.objSpawnProbability)
+            return;
+
+        this.relPoints = points;
         this.radius = radius;
+        this.relVertices = new Array();
+        this.isEye = isEye;
+        this.isNose = isNose;
 
         this.randomize();
 
-        this.center = createVector(0, 0);
-        for (let i = 0; i < points.length; i++) {
-            this.center.add(points[i]);
+        this.relCenter = createVector(0, 0);
+        for (let i = 0; i < this.relPoints.length; i++) {
+            this.relCenter.add(this.relPoints[i]);
         }
-        if (points.length != 0) this.center = this.center.div(points.length);
-        objects.push(this);
-        this.getMeasures();
+        if (this.relPoints.length != 0) this.relCenter = this.relCenter.div(this.relPoints.length);
 
-        this.isEye = isEye;
-        this.isNose = isNose;
+        this.getMeasures();
+        objects.push(this);
+    }
+
+    get points(){
+        var p = new Array();
+        var cw =  (window.innerWidth - widthOffset)/2;
+        var ch = window.innerHeight/2;
+        for (let i = 0; i < this.relPoints.length; i++){
+            p.push(createVector(cw - this.relPoints[i].x, ch - this.relPoints[i].y));
+        }
+        return p;
+    }
+
+    get center(){
+        var c = createVector( (window.innerWidth - widthOffset)/2 + this.relCenter.x, window.innerHeight/2 + this.relCenter.y);
+        return c;
+    }
+
+    get vertices(){
+        var v = new Array();
+        var cw =  (window.innerWidth - widthOffset)/2;
+        var ch = window.innerHeight/2;
+        for (let i = 0; i < this.relVertices.length; i++){
+            v.push(createVector(cw + this.relVertices[i].x, ch + this.relVertices[i].y));
+        }
+        return v;
     }
 
     randomize(){
-        for (let i = 0; i < this.points.length; i++){
-            this.points[i].x += random(-20,20);
-            this.points[i].y += random(-20,20);
+        for (let i = 0; i < this.relPoints.length; i++){
+            this.relPoints[i].x += random(-settings.objOffset,settings.objOffset);
+            this.relPoints[i].y += random(-settings.objOffset,settings.objOffset);
         }
-        this.radius += random(-20, 20);
+        this.radius += random(0,settings.objOffset);
     }
 
     getMeasures(){
@@ -80,32 +182,41 @@ class obj {
         }
     }
 
-    samplePoint(rand){
+    sampleVertex(rand){
         var theta = rand * Math.PI * 2;
         var y = (this.radius/2 + this.dy) * sin(theta);
         var x = (this.radius/2 + this.dx) * cos(theta);
-        var point = createVector(this.center.x + x, this.center.y + y);
+        var vert = createVector(this.relCenter.x + x, this.relCenter.y + y);
         stroke(0);
         noFill();
-        return point;
+        this.relVertices.push(vert);
+        return vert;
+    }
+
+    displayVertices(){
+        for (let i = 0; i < this.vertices.length; i++ ){
+            var p = this.vertices[i];
+            fill(255,0,0);
+            noStroke();
+            circle(p.x, p.y, 10);
+        }
     }
 }
 
 function initializeObjects() {
-    var cw = windowWidth/2;
-    var ch = windowHeight/2 - 50;
-    var p0 = [ createVector(cw - 100, ch - 50) ];
-    var o0 = new obj(p0, 100, true);
-    var p1 = [ createVector(cw + 100, ch - 50) ];
-    var o1 = new obj(p1, 100, true);
-    var p2 = [ createVector(cw, ch - 50), createVector(cw, ch + 5) ];
-    var o2 = new obj(p2, 50, false, true);
-    var p3 = [ createVector(cw - 30, ch + 100), createVector(cw + 30, ch + 100) ];
-    var o3 = new obj(p3, 50, false);
-    var p4 = [ createVector(cw, ch + 200)];
-    var o4 = new obj(p4, 200, false);
-    var p5 = [ createVector(cw, ch - 100)];
-    var o5 = new obj(p5, 300, false);
+    objects = new Array();
+    var p0 = [ createVector(-100, -50) ];
+    var o0 = new Obj(p0, 100, true);
+    var p1 = [ createVector(100, -50) ];
+    var o1 = new Obj(p1, 100, true);
+    var p2 = [ createVector(0, -50), createVector(0, 5) ];
+    var o2 = new Obj(p2, 50, false, true);
+    var p3 = [ createVector(-30, 100), createVector(30, 100) ];
+    var o3 = new Obj(p3, 50, false);
+    var p4 = [ createVector(0, 200)];
+    var o4 = new Obj(p4, 200, false);
+    var p5 = [ createVector(0, -100)];
+    var o5 = new Obj(p5, 300, false);
 }
 
 function displayObjects(){
@@ -120,10 +231,10 @@ function displayEyeObjects(){
     }
 }
 
-function initializePoints(){
+function initializeVertices(){
     var objs = shuffleArray(objects);
     for (let i = 0; i < objs.length; i++){
-        var n = int(random(2,4));
+        var n = int(random(settings.minVerticesPerObj,settings.maxVerticesPerObj));
         var b = 0;
         if (objs[i].isNose || objs[i].isEye) {
             n += 2;
@@ -131,22 +242,18 @@ function initializePoints(){
         }
         var rand = random();
         for (let j = 0; j < n; j++ ){
-            var p = objs[i].samplePoint(rand + (j+b)/n);
-            points.push(p);
+            var p = objs[i].sampleVertex(rand + (j+b)/n);
         }
     }
 }
 
-function displayPoints(){
-    for (let i = 0; i < points.length; i++ ){
-        var p = points[i];
-        fill(255,0,0);
-        noStroke();
-        circle(p.x, p.y, 10);
+function displayVertices(){
+    for (let i = 0; i < objects.length; i++ ){
+        objects[i].displayVertices();
     }
 }
 
-function displaySortedPoints(){
+function displaySortedVertices(){
     noFill();
     stroke(0);
 
@@ -188,11 +295,12 @@ function getClosestPoint(point){
 
 function createBezier(){
     bezierPoints = new Array();
+    var verts = getCurrentVerts();
 
-    for (let i = 0; i < points.length; i++){
-        var prevPoint = points[(points.length + (i-1)) % points.length];
-        var startPoint = points[i];
-        var endPoint = points[(points.length + (i+1)) % points.length];
+    for (let i = 0; i < verts.length; i++){
+        var prevPoint = verts[(verts.length + (i-1)) % verts.length];
+        var startPoint = verts[i];
+        var endPoint = verts[(verts.length + (i+1)) % verts.length];
         var dir1 = createVector(prevPoint.x, prevPoint.y).sub(startPoint);
         var dir2 = createVector(endPoint.x, endPoint.y).sub(startPoint);
         var d1 = dir1.mag()/2;
@@ -208,13 +316,22 @@ function createBezier(){
     }
 }
 
+function getCurrentVerts(){
+    var verts = new Array();
+    for (var i = 0; i < objects.length; i++){
+        for (var j = 0; j < objects[i].vertices.length; j++){
+            verts.push(objects[i].vertices[j]);
+        }
+    }
+    return verts;
+}
+
 function displayBezier(){
     for (let i = 1; i <= bezierPoints.length; i++ ){
         var size = 10;
 
         noStroke();
         if (i % 3 == 0 || (i-2)%3 == 0) {
-            console.log("ctrl point");
             noStroke();
             noFill();   
             size = 5;
@@ -250,14 +367,11 @@ function displayBezier(){
 function shuffleArray(array) {
     let currentIndex = array.length,  randomIndex;
   
-    // While there remain elements to shuffle...
     while (currentIndex != 0) {
   
-      // Pick a remaining element...
       randomIndex = Math.floor(Math.random() * currentIndex);
       currentIndex--;
   
-      // And swap it with the current element.
       [array[currentIndex], array[randomIndex]] = [
         array[randomIndex], array[currentIndex]];
     }
