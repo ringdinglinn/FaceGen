@@ -43,7 +43,7 @@ main{
     background-color: rgb(191, 191, 191);
 }
 
-#min-max div div{
+.min-max div div{
     display:inline-block;
     width: 40%;
     font-size:11px;
@@ -51,8 +51,8 @@ main{
     font-weight:normal;
 }
 
-#min-max div input{
-    width:40px;
+.min-max div input{
+    width:40px !important;
 }
 
 #save-buttons{

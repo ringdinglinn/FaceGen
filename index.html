@@ -12,23 +12,43 @@
         </div>
         <hr>
         <div class="field">
-          Feature spawn probability<br><br><input type="text" name="lname" onchange="updateSettings(1, this)"><br>
+          Feature spawn probability (0-1)<br><br><input type="text" name="lname" onchange="updateSettings(1, this)"><br>
         </div>
         <hr>
-        <div id="min-max" class="field">
+        <div class="field min-max">
           Vertex number range<br><br>
           <div>
-            <div id="min">
+            <div class="min">
               min
               <br>
               <input type="text" id="max-input" onchange="updateSettings(2, this)">
             </div>
-            <div id="max">
+            <div class="max">
               max
               <br>
               <input type="text" id="min-input" onchange="updateSettings(3, this)">
             </div>
           </div>
+        </div>
+        <hr>
+        <div class="field min-max">
+          Curve Smoothness (0-1)<br><br>
+          <div>
+            <div class="min">
+              min
+              <br>
+              <input type="text" id="max-input" onchange="updateSettings(4, this)">
+            </div>
+            <div class="max">
+              max
+              <br>
+              <input type="text" id="min-input" onchange="updateSettings(5, this)">
+            </div>
+          </div>
+        </div>
+        <hr>
+        <div class="field">
+          Line Completeness (0-1)<br><br><input type="text" name="lname" onchange="updateSettings(6, this)"><br>
         </div>
         <hr>
         <div class="field" id="upload-field">

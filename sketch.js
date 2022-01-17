@@ -92,6 +92,17 @@ function updateSettings(index, elem){
     if (index == 3){
         settings.maxVerticesPerObj = value;
     }
+    if (index == 4){
+        settings.minCurveSmoothness = value;
+    }
+    if (index == 5){
+        settings.maxCurveSmoothness = value;
+    }
+    if (index == 6){
+        settings.lineCompleteness = value;
+        if (value == 1) settings.closedLine = true;
+        else settings.closedLine = false;
+    }
 }
 
 class Settings{
@@ -100,6 +111,10 @@ class Settings{
         this.objSpawnProbability = 1;
         this.maxVerticesPerObj = 4;
         this.minVerticesPerObj = 1;
+        this.minCurveSmoothness = 1;
+        this.maxCurveSmoothness = 1;
+        this.closedLine = false;
+        this.lineCompleteness = 1;
     }
 }
 
@@ -297,14 +312,14 @@ function createBezier(){
     bezierPoints = new Array();
     var verts = getCurrentVerts();
 
-    for (let i = 0; i < verts.length; i++){
-        var prevPoint = verts[(verts.length + (i-1)) % verts.length];
+    for (let i = 0; i < verts.length - 1; i++){
+        var prevPoint = verts[(verts.length + i - 1) % verts.length];
         var startPoint = verts[i];
-        var endPoint = verts[(verts.length + (i+1)) % verts.length];
+        var endPoint = verts[(verts.length + i + 1) % verts.length];
         var dir1 = createVector(prevPoint.x, prevPoint.y).sub(startPoint);
         var dir2 = createVector(endPoint.x, endPoint.y).sub(startPoint);
-        var d1 = dir1.mag()/2;
-        var d2 = dir2.mag()/2;
+        var d1 = dir1.mag()/2 * (random() * (settings.maxCurveSmoothness - settings.minCurveSmoothness) + settings.minCurveSmoothness);
+        var d2 = dir2.mag()/2 * (random() * (settings.maxCurveSmoothness - settings.minCurveSmoothness) + settings.minCurveSmoothness);
         dir1.normalize();
         dir2.normalize();
         var cp1 = createVector(dir1.x, dir1.y).sub(dir2).normalize().mult(d1).add(startPoint);
@@ -327,15 +342,18 @@ function getCurrentVerts(){
 }
 
 function displayBezier(){
-    for (let i = 1; i <= bezierPoints.length; i++ ){
+    var n = bezierPoints.length;
+    if (!settings.closedLine){
+        n = bezierPoints.length - 5;
+        var m = Math.floor(n/4);
+        var base = n - (m*4);
+        n = base + Math.floor(m * 4 * settings.lineCompleteness);
+    }
+
+    for (let i = 1; i <= n; i++ ){
         var size = 10;
 
-        noStroke();
-        if (i % 3 == 0 || (i-2)%3 == 0) {
-            noStroke();
-            noFill();   
-            size = 5;
-        } else {
+        if ((i-1)%3 == 0) {
             fill(255,0,0);
             size = 10;
 
@@ -350,14 +368,14 @@ function displayBezier(){
 
             bezier(anchor1.x, anchor1.y, ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, anchor2.x, anchor2.y);
         }
-
-        // circle(bezierPoints[cycle(i)].x, bezierPoints[cycle(i)].y, size);
     }
 
     function cycle(i){
         var index = i;
-        index += bezierPoints.length;
-        index %= bezierPoints.length;
+        if (settings.closedLine){
+            index += bezierPoints.length;
+            index %= bezierPoints.length;
+        }
         return index;
     }
 }
